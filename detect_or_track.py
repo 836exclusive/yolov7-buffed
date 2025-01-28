@@ -8,6 +8,7 @@ import numpy as np
 from numpy import random
 import sys
 import os
+import av  # добавьте в начало файла
 
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -40,6 +41,64 @@ def draw_boxes(img, bbox, identities=None, categories=None, names=None, colors=N
         cv2.putText(img, label, (x1, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, tf, cv2.LINE_AA)
 
     return img
+
+
+def apply_datamosh(input_path, output_path):
+    """Применяет эффект datamosh к видео"""
+    container = av.open(input_path)
+    
+    # Получаем параметры входного видео
+    in_stream = container.streams.video[0]
+    codec_name = in_stream.codec_context.name
+    
+    # Создаем выходной контейнер с нужным кодеком
+    output = av.open(output_path, mode='w')
+    output_stream = output.add_stream(codec_name)
+    
+    # Копируем параметры и конвертируем в целые числа где нужно
+    output_stream.width = int(in_stream.width)
+    output_stream.height = int(in_stream.height)
+    output_stream.pix_fmt = in_stream.pix_fmt
+    
+    # Устанавливаем битрейт и другие параметры
+    output_stream.bit_rate = 2000000  # 2 Mbps
+    output_stream.options = {'crf': '23'}  # Качество сжатия
+    
+    try:
+        # Сохраняем первый I-frame
+        first_frame = True
+        skip_frames = 2  # Пропускаем каждый второй I-frame для усиления эффекта
+        frame_count = 0
+        
+        for frame in container.decode(video=0):
+            frame_count += 1
+            
+            # Сохраняем первый кадр как есть
+            if first_frame:
+                packet = output_stream.encode(frame)
+                if packet:
+                    output.mux(packet)
+                first_frame = False
+                continue
+                
+            # Пропускаем некоторые I-frames для создания эффекта
+            if frame_count % skip_frames != 0:
+                # Изменяем тип кадра на P-frame
+                frame.pict_type = 'P'
+                
+            packet = output_stream.encode(frame)
+            if packet:
+                output.mux(packet)
+        
+        # Записываем оставшиеся кадры
+        packet = output_stream.encode(None)
+        if packet:
+            output.mux(packet)
+            
+    finally:
+        # Закрываем файлы
+        container.close()
+        output.close()
 
 
 def detect():
@@ -148,11 +207,44 @@ def detect():
             if track_writer is not None:
                 track_writer.write(black_img)
 
+    # После записи обычного видео, применяем datamosh если включена опция
+    if isinstance(track_writer, cv2.VideoWriter):
+        track_writer.release()
+        track_writer = None  # Освобождаем ресурс
+        
+        if opt.datamosh:
+            try:
+                # Путь к временному файлу
+                temp_path = str(save_dir / 'temp_tracks.mp4')
+                final_path = str(save_dir / ('tracks_' + Path(p).name))
+                
+                # Даем время на освобождение файла
+                time.sleep(1)
+                
+                # Переименовываем оригинальный файл
+                os.rename(track_path, temp_path)
+                
+                # Применяем datamosh
+                apply_datamosh(temp_path, final_path)
+                
+                # Даем время на освобождение файла
+                time.sleep(1)
+                
+                # Удаляем временный файл
+                if os.path.exists(temp_path):
+                    os.remove(temp_path)
+                    
+            except Exception as e:
+                print(f"Ошибка при создании datamosh эффекта: {e}")
+                # В случае ошибки возвращаем оригинальный файл
+                if os.path.exists(temp_path):
+                    if not os.path.exists(final_path):
+                        os.rename(temp_path, final_path)
+
     # Освобождение ресурсов
     if isinstance(vid_writer, cv2.VideoWriter):
         vid_writer.release()
-    if isinstance(track_writer, cv2.VideoWriter):
-        track_writer.release()
+        vid_writer = None
 
 
 if __name__ == '__main__':
@@ -173,6 +265,7 @@ if __name__ == '__main__':
     parser.add_argument('--classes', nargs='+', type=int, help='filter by class: --class 0, or --class 0 2 3')
     parser.add_argument('--agnostic-nms', action='store_true', help='class-agnostic NMS')
     parser.add_argument('--unique-track-color', action='store_true', help='use unique color for each track')
+    parser.add_argument('--datamosh', action='store_true', help='apply datamosh effect to tracking video')
 
     opt = parser.parse_args()
     random.seed(1)
