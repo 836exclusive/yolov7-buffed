@@ -110,20 +110,7 @@ def detect():
                         black_img = draw_boxes(black_img, bbox_xyxy, identities, categories, names, colors)
 
                         if opt.show_track:
-                            # Сначала рисуем траектории
-                            for t, track in enumerate(sort_tracker.getTrackers()):
-                                track_color = colors[int(track.detclass)]
-                                
-                                # Рисуем траектории
-                                for i in range(len(track.centroidarr) - 1):
-                                    pt1 = (int(track.centroidarr[i][0]), int(track.centroidarr[i][1]))
-                                    pt2 = (int(track.centroidarr[i + 1][0]), int(track.centroidarr[i + 1][1]))
-
-                                    # Отрисовка треков на обоих изображениях
-                                    cv2.line(im0, pt1, pt2, track_color, opt.thickness)
-                                    cv2.line(black_img, pt1, pt2, track_color, opt.thickness)
-
-                            # Затем копируем объекты
+                            # Копируем объекты на черный фон
                             for i, box in enumerate(bbox_xyxy):
                                 x1, y1, x2, y2 = map(int, box)
                                 # Добавляем небольшой отступ вокруг объекта
