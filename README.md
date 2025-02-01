@@ -49,8 +49,7 @@ pip install av-python
 pip install filterpy
 pip install scikit-image
 
-# For CUDA support (optional, replace XX with your CUDA version)
-pip install torch torchvision --extra-index-url https://download.pytorch.org/whl/cu11X
+
 ```
 
 3. Or install all requirements at once
@@ -59,8 +58,3 @@ pip install torch torchvision --extra-index-url https://download.pytorch.org/whl
 pip install -r requirements.txt
 ```
 
-4. Download weights
-
-```bash
-wget https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7.pt
-```
