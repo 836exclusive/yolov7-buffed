@@ -15,11 +15,9 @@ For questions and support:
 ## 📝 Citation
 
 ```bibtex
-@inproceedings{wang2023yolov7,
-    title={{YOLOv7}: Trainable bag-of-freebies sets new state-of-the-art for real-time object detectors},
-    author={Wang, Chien-Yao and Bochkovskiy, Alexey and Liao, Hong-Yuan Mark},
-    booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
-    year={2023}
+В 2023 году я открыл этот способ, пытался его пропушить и применять где только можно. В следующем году успешно защитил диплом бакалавра на эту тему. Спустя время начал находить неестественные попытки это повторить. Ребята делали это с помощью AE и собственноручно. Такой способ реализации нарушает всю мою идеологию, ибо я считаю что настоящий вебпанк не должен быть фейковым.
+
+Не претендую на уникальность, но спустя год раскатываю это в сеть чтобы как можно больше людей знали как делать нужно.
 }
 ```
 
@@ -29,4 +27,6 @@ This project is released under the same license as the original YOLOv7.
 
 ## 🙏 Acknowledgements
 
-This work builds upon the excellent [YOLOv7](https://github.com/WongKinYiu/yolov7) implementation.
+• [WongKinYiu/yolov7](https://github.com/WongKinYiu/yolov7)
+• [haroonshakeel/yolov7-object-tracking
+](https://github.com/haroonshakeel/yolov7-object-tracking)
